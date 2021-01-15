@@ -1,6 +1,5 @@
 import { ApolloServer } from 'apollo-server';
 import { makeSchema, objectType, queryType } from '@nexus/schema';
-
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -21,13 +20,9 @@ const Query = queryType({
     t.string('hello', { resolve: () => 'hello World' });
     t.list.field('planets', {
       type: Planet,
-      resolve: () => [
-        {
-          id: 1,
-          name: 'Earth',
-          type: 'Rocky',
-        },
-      ],
+      resolve: () => {
+        return prisma.planet.findMany();
+      },
     });
   },
 });
@@ -35,6 +30,11 @@ const Query = queryType({
 // Skapar schemat med typerna som anges
 const schema = makeSchema({
   types: [Query, Planet],
+  // Tar fram types och schemat baserat på en Code First Approach
+  outputs: {
+    schema: `${__dirname}/generated/schema.graphql`,
+    typegen: `${__dirname}/generated/types.ts`,
+  },
 });
 
 // Skapar en server baserat på schemat
